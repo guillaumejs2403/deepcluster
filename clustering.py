@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 import time
+import pdb
 
 import faiss
 import numpy as np
@@ -83,9 +84,9 @@ def preprocess_features(npdata, pca=256):
     """
     _, ndim = npdata.shape
     npdata =  npdata.astype('float32')
-
     # Apply PCA-whitening with Faiss
-    mat = faiss.PCAMatrix (ndim, pca, eigen_power=-0.5)
+    mat = faiss.PCAMatrix(ndim, pca, eigen_power=-0.5)
+
     mat.train(npdata)
     assert mat.is_trained
     npdata = mat.apply_py(npdata)
@@ -139,7 +140,7 @@ def cluster_assign(images_lists, dataset):
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-    t = transforms.Compose([transforms.RandomResizedCrop(224),
+    t = transforms.Compose([transforms.RandomResizedCrop(32),
                             transforms.RandomHorizontalFlip(),
                             transforms.ToTensor(),
                             normalize])

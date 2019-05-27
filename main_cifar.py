@@ -1,4 +1,4 @@
-# Copyright (c) 2017-present, Facebook, Inc.
+ # Copyright (c) 2017-present, Facebook, Inc.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -6,6 +6,7 @@
 #
 import argparse
 import os
+import pdb
 import pickle
 import time
 
@@ -28,15 +29,14 @@ from util import AverageMeter, Logger, UnifLabelSampler
 
 parser = argparse.ArgumentParser(description='PyTorch Implementation of DeepCluster')
 
-parser.add_argument('data', metavar='DIR', help='path to dataset')
 parser.add_argument('--arch', '-a', type=str, metavar='ARCH',
-                    choices=['alexnet', 'vgg16'], default='alexnet',
+                    choices=['alexnet', 'vgg16', 'alexnetc'], default='alexnetc',
                     help='CNN architecture (default: alexnet)')
 parser.add_argument('--sobel', action='store_true', help='Sobel filtering')
 parser.add_argument('--clustering', type=str, choices=['Kmeans', 'PIC'],
                     default='Kmeans', help='clustering algorithm (default: Kmeans)')
-parser.add_argument('--nmb_cluster', '--k', type=int, default=10000,
-                    help='number of cluster for k-means (default: 10000)')
+parser.add_argument('--nmb_cluster', '--k', type=int, default=1000,
+                    help='number of cluster for k-means (default: 1000)')
 parser.add_argument('--lr', default=0.05, type=float,
                     help='learning rate (default: 0.05)')
 parser.add_argument('--wd', default=-5, type=float,
@@ -120,15 +120,28 @@ def main():
     # preprocessing of data
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-    
-    tra = [transforms.Resize(256),
-           transforms.CenterCrop(224),
+
+
+    tra = [transforms.Resize(36),
+           transforms.CenterCrop(32),
            transforms.ToTensor(),
            normalize]
 
+    # tra = transforms.Compose([
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     normalize
+    # ])
+
     # load the data
     end = time.time()
-    dataset = datasets.ImageFolder(args.data, transform=transforms.Compose(tra))
+
+    # ================================
+    # dataset
+    # ================================
+
+
+    dataset = datasets.ImageFolder('/home/gjeanneret/CIFAR10', transform=transforms.Compose(tra))
     if args.verbose: print('Load dataset: {0:.2f} s'.format(time.time() - end))
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=args.batch,
@@ -255,15 +268,17 @@ def train(loader, model, crit, opt, epoch):
                 'optimizer' : opt.state_dict()
             }, path)
 
-        target = target.cuda(async=True)
+        # target = target.cuda(async=True)
+        target = target.cuda()
         input_var = torch.autograd.Variable(input_tensor.cuda())
         target_var = torch.autograd.Variable(target)
-
         output = model(input_var)
         loss = crit(output, target_var)
 
         # record loss
-        losses.update(loss.data[0], input_tensor.size(0))
+        # pdb.set_trace()
+        # losses.update(loss.data[0], input_tensor.size(0))
+        losses.update(loss.item(), input_tensor.size(0))
 
         # compute gradient and do SGD step
         opt.zero_grad()
