@@ -1,4 +1,4 @@
- # Copyright (c) 2017-present, Facebook, Inc.
+# Copyright (c) 2017-present, Facebook, Inc.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -25,6 +25,9 @@ import torchvision.datasets as datasets
 import clustering
 import models
 from util import AverageMeter, Logger, UnifLabelSampler
+from dataset_utils import dataset_exclude_category_ImageFolder
+
+from create_dataset import create_dataset
 
 
 parser = argparse.ArgumentParser(description='PyTorch Implementation of DeepCluster')
@@ -60,6 +63,9 @@ parser.add_argument('--checkpoints', type=int, default=25000,
 parser.add_argument('--seed', type=int, default=31, help='random seed (default: 31)')
 parser.add_argument('--exp', type=str, default='', help='path to exp folder')
 parser.add_argument('--verbose', action='store_true', help='chatty')
+parser.add_argument('--exclude', action='store_true', help=':)')
+parser.add_argument('--exclude-labels', nargs='+', default=[0], help='Classification Layers')
+parser.add_argument('--CIFAR100', action='store_true', help='use CIFAR100 db')
 
 
 def main():
@@ -121,17 +127,10 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
-
     tra = [transforms.Resize(36),
            transforms.CenterCrop(32),
            transforms.ToTensor(),
            normalize]
-
-    # tra = transforms.Compose([
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.ToTensor(),
-    #     normalize
-    # ])
 
     # load the data
     end = time.time()
@@ -140,8 +139,10 @@ def main():
     # dataset
     # ================================
 
-
+    create_dataset(CIFAR100=args.CIFAR100)
     dataset = datasets.ImageFolder('/home/gjeanneret/CIFAR10', transform=transforms.Compose(tra))
+    if args.exclude:
+        dataset = dataset_exclude_category_ImageFolder(dataset=dataset, cat_exlude=[int(i) for i in args.exclude_labels])
     if args.verbose: print('Load dataset: {0:.2f} s'.format(time.time() - end))
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=args.batch,
