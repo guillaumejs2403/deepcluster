@@ -149,7 +149,14 @@ def make_layers_features(cfg, input_dim, bn):
     return nn.Sequential(*layers)
 
 #(out, ks, stride, pad)
-CFG_CIFAR = [(96, 11, 5, 4), 'M', (256, 5, 1, 2), 'M', (384, 3, 1, 1), (384, 3, 1, 1), (256, 3, 1, 1), 'M']
+
+CFG_CIFAR = [
+    (96, 11, 4, 5), 'M',
+    (256, 5, 1, 2), 'M', (384, 3, 1, 1),
+    (384, 3, 1, 1), (256, 3, 1, 1), 'M'
+]
+
+
 def alexnet(sobel=False, bn=True, out=1000):
     dim = 2 + int(not sobel)
     model = AlexNet(make_layers_features(CFG['2012'], dim, bn=bn), out, sobel)
